@@ -1,5 +1,7 @@
 # diagram.py
 from diagrams import Cluster, Diagram, Edge
+from diagrams.custom import Custom
+from urllib.request import urlretrieve
 from diagrams.k8s.compute import Deployment, ReplicaSet, Pod
 from diagrams.k8s.network import Service, Ingress
 from diagrams.k8s.podconfig import Secret
@@ -23,8 +25,11 @@ from diagrams.onprem.network import Apache, HAProxy, Internet, Nginx, Traefik, P
 from diagrams.onprem.storage import CEPH, Glusterfs
 from diagrams.oci.compute import OCIRegistry
 
-with Diagram("Jenkins CI/CD Pipeline", filename="jenkins_cicd_pipeline", show=False):
-    user = User("code change")
+with Diagram("Jenkins CI/CD Pipeline", filename="jenkins_argocd_cicd_pipeline", show=False):
+    user_url = "https://image.freepik.com/free-vector/woman-officer-working-woman-flat-design-illustrator-icon_35659-24.jpg"
+    user_icon = "bastion_qfjova.png"
+    urlretrieve(user_url, user_icon)
+    user = Custom("code change", user_icon)
     github = Git("Github")
     jenkins = Jenkins("Jenkins server")
     argocd = ArgoCD("ArgoCD")
@@ -44,7 +49,7 @@ with Diagram("Jenkins CI/CD Pipeline", filename="jenkins_cicd_pipeline", show=Fa
     user >> Edge(label="commit") >> github >> Edge(
         label="triggers") >> jenkins
     jenkins_push >> dockerhub
-    jenkins_push >> jenkins_update
     jenkins >> jenkins_test
-    jenkins >> jenkins_update
-    jenkins_deploy >> app_grp
+    dockerhub >> Edge(label="image") >> argocd
+    argocd >> app_grp
+    github >> Edge(label="deployment config") >> argocd
